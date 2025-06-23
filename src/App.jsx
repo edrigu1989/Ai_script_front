@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
@@ -12,16 +12,61 @@ import {
   Star,
   ArrowRight,
   Play,
-  CheckCircle
+  CheckCircle,
+  Sun,
+  Moon,
+  X,
+  Mail,
+  Lock,
+  User
 } from 'lucide-react'
 import './App.css'
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(true)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [showRegisterModal, setShowRegisterModal] = useState(false)
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' })
+  const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '' })
+
+  // Initialize dark mode on component mount
+  useEffect(() => {
+    document.documentElement.classList.add('dark')
+  }, [])
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode)
     document.documentElement.classList.toggle('dark')
+  }
+
+  const handleLogin = (e) => {
+    e.preventDefault()
+    alert(`Login attempt with email: ${loginForm.email}`)
+    setShowLoginModal(false)
+    setLoginForm({ email: '', password: '' })
+  }
+
+  const handleRegister = (e) => {
+    e.preventDefault()
+    alert(`Registration attempt with name: ${registerForm.name}, email: ${registerForm.email}`)
+    setShowRegisterModal(false)
+    setRegisterForm({ name: '', email: '', password: '' })
+  }
+
+  const handleStartCreating = () => {
+    alert('Redirecting to script creation tool...')
+  }
+
+  const handleWatchDemo = () => {
+    alert('Opening demo video...')
+  }
+
+  const handleStartFreeTrial = () => {
+    alert('Starting free trial...')
+  }
+
+  const handleViewPricing = () => {
+    alert('Redirecting to pricing page...')
   }
 
   const features = [
@@ -88,11 +133,15 @@ function App() {
             <h1 className="text-2xl font-bold">AI Script Strategist</h1>
           </div>
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" onClick={toggleDarkMode}>
-              {isDarkMode ? '☀️' : '🌙'}
+            <Button variant="ghost" onClick={toggleDarkMode} className="p-2">
+              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
-            <Button variant="outline">Sign In</Button>
-            <Button>Get Started</Button>
+            <Button variant="outline" onClick={() => setShowLoginModal(true)}>
+              Sign In
+            </Button>
+            <Button onClick={() => setShowRegisterModal(true)}>
+              Get Started
+            </Button>
           </div>
         </div>
       </header>
@@ -114,11 +163,11 @@ function App() {
             Perfect for YouTube, TikTok, Instagram, and LinkedIn content creators.
           </p>
           <div className="flex gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8">
+            <Button size="lg" className="text-lg px-8" onClick={handleStartCreating}>
               <Play className="h-5 w-5 mr-2" />
               Start Creating
             </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8">
+            <Button size="lg" variant="outline" className="text-lg px-8" onClick={handleWatchDemo}>
               Watch Demo
               <ArrowRight className="h-5 w-5 ml-2" />
             </Button>
@@ -137,7 +186,7 @@ function App() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="border-border/50 bg-card/50 backdrop-blur">
+              <Card key={index} className="border-border/50 bg-card/50 backdrop-blur hover:bg-card/70 transition-colors cursor-pointer">
                 <CardHeader>
                   <div className="flex items-center space-x-3">
                     <div className="p-2 bg-primary/10 rounded-lg text-primary">
@@ -168,7 +217,7 @@ function App() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="border-border/50">
+              <Card key={index} className="border-border/50 hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-center space-x-1 mb-2">
                     {[...Array(testimonial.rating)].map((_, i) => (
@@ -200,11 +249,11 @@ function App() {
             to create engaging video content that drives results.
           </p>
           <div className="flex gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8">
+            <Button size="lg" className="text-lg px-8" onClick={handleStartFreeTrial}>
               <CheckCircle className="h-5 w-5 mr-2" />
               Start Free Trial
             </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8">
+            <Button size="lg" variant="outline" className="text-lg px-8" onClick={handleViewPricing}>
               View Pricing
             </Button>
           </div>
@@ -225,6 +274,144 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Sign In</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setShowLoginModal(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="email"
+                      placeholder="Enter your email"
+                      className="w-full pl-10 pr-3 py-2 border border-border rounded-md bg-background"
+                      value={loginForm.email}
+                      onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="password"
+                      placeholder="Enter your password"
+                      className="w-full pl-10 pr-3 py-2 border border-border rounded-md bg-background"
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+                <Button type="submit" className="w-full">
+                  Sign In
+                </Button>
+                <p className="text-center text-sm text-muted-foreground">
+                  Don't have an account?{' '}
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={() => {
+                      setShowLoginModal(false)
+                      setShowRegisterModal(true)
+                    }}
+                  >
+                    Sign up
+                  </button>
+                </p>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Register Modal */}
+      {showRegisterModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Get Started</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setShowRegisterModal(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Full Name</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Enter your full name"
+                      className="w-full pl-10 pr-3 py-2 border border-border rounded-md bg-background"
+                      value={registerForm.name}
+                      onChange={(e) => setRegisterForm({...registerForm, name: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="email"
+                      placeholder="Enter your email"
+                      className="w-full pl-10 pr-3 py-2 border border-border rounded-md bg-background"
+                      value={registerForm.email}
+                      onChange={(e) => setRegisterForm({...registerForm, email: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="password"
+                      placeholder="Create a password"
+                      className="w-full pl-10 pr-3 py-2 border border-border rounded-md bg-background"
+                      value={registerForm.password}
+                      onChange={(e) => setRegisterForm({...registerForm, password: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+                <Button type="submit" className="w-full">
+                  Create Account
+                </Button>
+                <p className="text-center text-sm text-muted-foreground">
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={() => {
+                      setShowRegisterModal(false)
+                      setShowLoginModal(true)
+                    }}
+                  >
+                    Sign in
+                  </button>
+                </p>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }
