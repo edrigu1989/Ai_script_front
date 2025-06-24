@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
+import ScriptGenerator from './components/ScriptGenerator.jsx'
 import { 
   Sparkles, 
   Video, 
@@ -35,6 +36,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [user, setUser] = useState(null)
+  const [currentView, setCurrentView] = useState('home') // 'home' or 'generator'
 
   // Initialize dark mode on component mount
   useEffect(() => {
@@ -125,8 +127,8 @@ function App() {
 
   const handleStartCreating = () => {
     if (user) {
-      setMessage('Redirecting to script creation tool...')
-      // Here you would redirect to the actual script creation page
+      setCurrentView('generator')
+      setMessage('')
     } else {
       setMessage('Please sign in to start creating scripts')
       setShowLoginModal(true)
@@ -155,6 +157,7 @@ function App() {
 
   const handleLogout = () => {
     setUser(null)
+    setCurrentView('home')
     setMessage('Logged out successfully')
   }
 
@@ -226,25 +229,33 @@ function App() {
         </div>
       )}
 
-      {/* Header */}
-      <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Sparkles className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">AI Script Strategist</h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" onClick={toggleDarkMode} className="p-2">
-              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
-            {user ? (
+      {/* Conditional Rendering based on currentView */}
+      {currentView === 'generator' && user ? (
+        <ScriptGenerator 
+          user={user} 
+          onBack={() => setCurrentView('home')} 
+        />
+      ) : (
+        <>
+          {/* Header */}
+          <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container mx-auto px-4 py-4 flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <span className="text-sm">Welcome, {user.email}!</span>
-                <Button variant="outline" onClick={handleLogout}>
-                  Logout
-                </Button>
+                <Sparkles className="h-8 w-8 text-primary" />
+                <h1 className="text-2xl font-bold">AI Script Strategist</h1>
               </div>
-            ) : (
+              <div className="flex items-center space-x-4">
+                <Button variant="ghost" onClick={toggleDarkMode} className="p-2">
+                  {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                </Button>
+                {user ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm">Welcome, {user.email}!</span>
+                    <Button variant="outline" onClick={handleLogout}>
+                      Logout
+                    </Button>
+                  </div>
+                ) : (
               <>
                 <Button variant="outline" onClick={() => setShowLoginModal(true)}>
                   Sign In
@@ -386,6 +397,8 @@ function App() {
           </div>
         </div>
       </footer>
+        </>
+      )}
 
       {/* Login Modal */}
       {showLoginModal && (
