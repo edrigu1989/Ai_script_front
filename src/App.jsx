@@ -18,9 +18,13 @@ import {
   X,
   Mail,
   Lock,
-  User
+  User,
+  Loader2
 } from 'lucide-react'
 import './App.css'
+
+// API Configuration
+const API_BASE_URL = 'https://aiscriptback-production.up.railway.app'
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(true)
@@ -28,6 +32,9 @@ function App() {
   const [showRegisterModal, setShowRegisterModal] = useState(false)
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '' })
+  const [isLoading, setIsLoading] = useState(false)
+  const [message, setMessage] = useState('')
+  const [user, setUser] = useState(null)
 
   // Initialize dark mode on component mount
   useEffect(() => {
@@ -35,38 +42,120 @@ function App() {
   }, [])
 
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode)
-    document.documentElement.classList.toggle('dark')
+    const newMode = !isDarkMode
+    setIsDarkMode(newMode)
+    if (newMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
   }
 
-  const handleLogin = (e) => {
-    e.preventDefault()
-    alert(`Login attempt with email: ${loginForm.email}`)
-    setShowLoginModal(false)
-    setLoginForm({ email: '', password: '' })
+  // API call function
+  const apiCall = async (endpoint, method = 'GET', data = null) => {
+    try {
+      const config = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+      
+      if (data) {
+        config.body = JSON.stringify(data)
+      }
+
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, config)
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.detail || 'Something went wrong')
+      }
+      
+      return result
+    } catch (error) {
+      throw new Error(error.message || 'Network error')
+    }
   }
 
-  const handleRegister = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
-    alert(`Registration attempt with name: ${registerForm.name}, email: ${registerForm.email}`)
-    setShowRegisterModal(false)
-    setRegisterForm({ name: '', email: '', password: '' })
+    setIsLoading(true)
+    setMessage('')
+    
+    try {
+      const result = await apiCall('/api/v1/auth/login', 'POST', {
+        email: loginForm.email,
+        password: loginForm.password
+      })
+      
+      setUser(result)
+      setMessage(`Welcome back! ${result.message}`)
+      setShowLoginModal(false)
+      setLoginForm({ email: '', password: '' })
+    } catch (error) {
+      setMessage(`Login failed: ${error.message}`)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleRegister = async (e) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setMessage('')
+    
+    try {
+      const result = await apiCall('/api/v1/auth/signup', 'POST', {
+        email: registerForm.email,
+        password: registerForm.password,
+        full_name: registerForm.name
+      })
+      
+      setUser(result)
+      setMessage(`Registration successful! ${result.message}`)
+      setShowRegisterModal(false)
+      setRegisterForm({ name: '', email: '', password: '' })
+    } catch (error) {
+      setMessage(`Registration failed: ${error.message}`)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleStartCreating = () => {
-    alert('Redirecting to script creation tool...')
+    if (user) {
+      setMessage('Redirecting to script creation tool...')
+      // Here you would redirect to the actual script creation page
+    } else {
+      setMessage('Please sign in to start creating scripts')
+      setShowLoginModal(true)
+    }
   }
 
   const handleWatchDemo = () => {
-    alert('Opening demo video...')
+    setMessage('Opening demo video...')
+    // Here you would open a demo video or modal
   }
 
   const handleStartFreeTrial = () => {
-    alert('Starting free trial...')
+    if (user) {
+      setMessage('Starting your free trial...')
+      // Here you would start the free trial process
+    } else {
+      setMessage('Please sign up to start your free trial')
+      setShowRegisterModal(true)
+    }
   }
 
   const handleViewPricing = () => {
-    alert('Redirecting to pricing page...')
+    setMessage('Redirecting to pricing page...')
+    // Here you would redirect to pricing page
+  }
+
+  const handleLogout = () => {
+    setUser(null)
+    setMessage('Logged out successfully')
   }
 
   const features = [
@@ -125,6 +214,18 @@ function App() {
 
   return (
     <div className={`min-h-screen bg-background text-foreground ${isDarkMode ? 'dark' : ''}`}>
+      {/* Message Banner */}
+      {message && (
+        <div className="bg-primary/10 border-b border-primary/20 px-4 py-2">
+          <div className="container mx-auto flex items-center justify-between">
+            <p className="text-sm">{message}</p>
+            <Button variant="ghost" size="sm" onClick={() => setMessage('')}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -136,12 +237,23 @@ function App() {
             <Button variant="ghost" onClick={toggleDarkMode} className="p-2">
               {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
-            <Button variant="outline" onClick={() => setShowLoginModal(true)}>
-              Sign In
-            </Button>
-            <Button onClick={() => setShowRegisterModal(true)}>
-              Get Started
-            </Button>
+            {user ? (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm">Welcome, {user.email}!</span>
+                <Button variant="outline" onClick={handleLogout}>
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => setShowLoginModal(true)}>
+                  Sign In
+                </Button>
+                <Button onClick={() => setShowRegisterModal(true)}>
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -298,6 +410,7 @@ function App() {
                       value={loginForm.email}
                       onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
                       required
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -312,11 +425,19 @@ function App() {
                       value={loginForm.password}
                       onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
                       required
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
-                <Button type="submit" className="w-full">
-                  Sign In
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Signing In...
+                    </>
+                  ) : (
+                    'Sign In'
+                  )}
                 </Button>
                 <p className="text-center text-sm text-muted-foreground">
                   Don't have an account?{' '}
@@ -327,6 +448,7 @@ function App() {
                       setShowLoginModal(false)
                       setShowRegisterModal(true)
                     }}
+                    disabled={isLoading}
                   >
                     Sign up
                   </button>
@@ -360,6 +482,7 @@ function App() {
                       value={registerForm.name}
                       onChange={(e) => setRegisterForm({...registerForm, name: e.target.value})}
                       required
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -374,6 +497,7 @@ function App() {
                       value={registerForm.email}
                       onChange={(e) => setRegisterForm({...registerForm, email: e.target.value})}
                       required
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -388,11 +512,19 @@ function App() {
                       value={registerForm.password}
                       onChange={(e) => setRegisterForm({...registerForm, password: e.target.value})}
                       required
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
-                <Button type="submit" className="w-full">
-                  Create Account
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    'Create Account'
+                  )}
                 </Button>
                 <p className="text-center text-sm text-muted-foreground">
                   Already have an account?{' '}
@@ -403,6 +535,7 @@ function App() {
                       setShowRegisterModal(false)
                       setShowLoginModal(true)
                     }}
+                    disabled={isLoading}
                   >
                     Sign in
                   </button>
